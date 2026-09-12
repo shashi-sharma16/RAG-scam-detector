@@ -1,15 +1,25 @@
 import chromadb
+import ollama
+import re
 from sentence_transformers import SentenceTransformer
 
 with open("data/scams.txt", "r", encoding="utf-8") as file:
     text = file.read()
 
-chunk_size = 200
-chunks = []
+sentences = re.split(r'(?<=[.!?])\s+', text.strip())
 
-for i in range(0, len(text), chunk_size):
-    chunk = text[i:i + chunk_size]
-    chunks.append(chunk)
+chunks = []
+current_chunk = ""
+
+for sentence in sentences:
+    if len(current_chunk) + len(sentence) <= 300:
+        current_chunk += sentence + " "
+    else:
+        chunks.append(current_chunk.strip())
+        current_chunk = sentence + " "
+
+if current_chunk:
+    chunks.append(current_chunk.strip())
 
 print("Number of chunks:", len(chunks))
 
@@ -35,7 +45,7 @@ collection.add(
 
 print("Stored", len(chunks), "chunks in ChromaDB.")
 
-question = "A company wants me to pay a registeration fee before giving me a jon. Is this suspicious?"
+question = input("\nEnter your question: ")
 
 question_embedding = model.encode(question).tolist()
 
@@ -52,3 +62,33 @@ print("\nRetrieved information:")
 for document in results["documents"][0]:
     print("\n---")
     print(document)
+
+context = "\n\n".join(results["documents"][0])
+
+prompt = f"""
+You are a scam-awareness assistant.
+
+Answer the user's question using only the information provided below.
+
+Information:
+{context}
+
+User question:
+{question}
+
+Give a clear and simple answer.
+Do not make up information that is not supported by the provided information.
+"""
+
+response = ollama.chat(
+    model="qwen3:4b",
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ]
+)
+
+print("\nAI Answer:")
+print(response["message"]["content"])

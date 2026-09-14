@@ -6,7 +6,8 @@ from sentence_transformers import SentenceTransformer
 with open("data/scams.txt", "r", encoding="utf-8") as file:
     text = file.read()
 
-sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+text = re.sub(r'\s+', ' ', text).strip()
+sentences = re.split(r'(?<=[.!?])\s+', text)
 
 chunks = []
 current_chunk = ""
@@ -37,13 +38,15 @@ collection = client.get_or_create_collection(
     name="Scam_knowledge"
 )
 
-collection.add(
-    ids=[f"chunk_{i}" for i in range(len(chunks))],
-    documents=chunks,
-    embeddings=embeddings.tolist()
-)
-
-print("Stored", len(chunks), "chunks in ChromaDB.")
+if collection.count() == 0:
+    collection.add(
+        ids=[f"chunk_{i}" for i in range(len(chunks))],
+        documents=chunks,
+        embeddings=embeddings.tolist()
+    )
+    print("Stored", len(chunks), "chunks in ChromaDB.")
+else:
+    print("Chunks already exist in ChromaDB.")
 
 question = input("\nEnter your question: ")
 
@@ -51,8 +54,11 @@ question_embedding = model.encode(question).tolist()
 
 results = collection.query(
     query_embeddings=[question_embedding],
-    n_results=2
+    n_results=2,
+    include=["documents", "distances"]
 )
+
+print("\nDistances:", results["distances"][0])
 
 print("\nQuestion:")
 print(question)
@@ -68,7 +74,7 @@ context = "\n\n".join(results["documents"][0])
 prompt = f"""
 You are a scam-awareness assistant.
 
-Answer the user's question using only the information provided below.
+Analyze the user's question using only the information provided below.
 
 Information:
 {context}
@@ -76,8 +82,19 @@ Information:
 User question:
 {question}
 
-Give a clear and simple answer.
+Give your response in this format:
+
+Scam Type: [Phishing / Fake Job Scam / Investment Scam / Other / Unknown]
+Risk Level: [LOW / MEDIUM / HIGH]
+
+Reason:
+[Explain briefly why the situation may or may not be suspicious.]
+
+Advice:
+[Give a short and practical safety recommendation.]
+
 Do not make up information that is not supported by the provided information.
+If the information is not enough to identify the scam type, write "Unknown".
 """
 
 response = ollama.chat(

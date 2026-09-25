@@ -58,7 +58,16 @@ results = collection.query(
     include=["documents", "distances"]
 )
 
-print("\nDistances:", results["distances"][0])
+best_distance = results["distances"][0][0]
+
+if best_distance < 1.2:
+    match_level = "Strong"
+elif best_distance < 1.5:
+    match_level = "Moderate"
+else:
+    match_level = "Weak"
+
+print("\nRetrieval Match:", match_level)
 
 print("\nQuestion:")
 print(question)
@@ -74,7 +83,12 @@ context = "\n\n".join(results["documents"][0])
 prompt = f"""
 You are a scam-awareness assistant.
 
-Analyze the user's question using only the information provided below.
+IMPORTANT RULES:
+1. Use ONLY the information provided in the Information section.
+2. Do NOT add facts, assumptions, explanations, or advice that are not supported by the Information section.
+3. If the Information section does not provide enough evidence, use "Unknown".
+4. Keep the answer short and clear.
+5. Follow the exact output format below.
 
 Information:
 {context}
@@ -82,29 +96,27 @@ Information:
 User question:
 {question}
 
-Give your response in this format:
+Output format:
 
 Scam Type: [Phishing / Fake Job Scam / Investment Scam / Other / Unknown]
-Risk Level: [LOW / MEDIUM / HIGH]
+Risk Level: [LOW / MEDIUM / HIGH / Unknown]
 
 Reason:
-[Explain briefly why the situation may or may not be suspicious.]
+[Explain briefly using only the provided information.]
 
 Advice:
-[Give a short and practical safety recommendation.]
-
-Do not make up information that is not supported by the provided information.
-If the information is not enough to identify the scam type, write "Unknown".
+[Give practical advice based only on the provided information.]
 """
 
 response = ollama.chat(
-    model="qwen3:4b",
+    model="qwen2.5:3b",
     messages=[
         {
             "role": "user",
             "content": prompt
         }
-    ]
+    ],
+    think=False
 )
 
 print("\nAI Answer:")

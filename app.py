@@ -34,10 +34,14 @@ collection = client.get_or_create_collection(
 
 if collection.count() == 0:
     collection.add(
-        ids=[f"chunk_{i}" for i in range(len(chunks))],
-        documents=chunks,
-        embeddings=embeddings.tolist()
-    )
+    ids=[f"chunk_{i}" for i in range(len(chunks))],
+    documents=chunks,
+    embeddings=embeddings.tolist(),
+    metadatas=[
+        {"source": "scams.txt", "chunk": i + 1}
+        for i in range(len(chunks))
+    ]
+)
     print("Stored", len(chunks), "chunks in ChromaDB.")
 else:
     print("Chunks already exist in ChromaDB.")
@@ -49,7 +53,7 @@ question_embedding = model.encode(question).tolist()
 results = collection.query(
     query_embeddings=[question_embedding],
     n_results=2,
-    include=["documents", "distances"]
+    include=["documents", "distances", "metadatas"]
 )
 
 best_distance = results["distances"][0][0]
@@ -64,6 +68,7 @@ else:
 print("\nRetrieval Match:", match_level)
 
 context = "\n\n".join(results["documents"][0])
+sources = results["metadatas"][0]
 
 prompt = f"""
 You are a scam-awareness assistant.
@@ -109,5 +114,9 @@ print("           SCAM ANALYSIS")
 print("=" * 40)
 
 print(response["message"]["content"])
+print("\nSources:")
+
+for i, source in enumerate(sources, start=1):
+    print(f"[{i}] {source['source']} - Chunk {source['chunk']}")
 
 print("=" * 40)

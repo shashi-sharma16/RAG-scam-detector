@@ -22,12 +22,6 @@ for sentence in sentences:
 if current_chunk:
     chunks.append(current_chunk.strip())
 
-print("Number of chunks:", len(chunks))
-
-for i, chunk in enumerate(chunks):
-    print(f"\n--- Chunk {i + 1} ---")
-    print(chunk)
-
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 embeddings = model.encode(chunks)
@@ -68,15 +62,6 @@ else:
     match_level = "Weak"
 
 print("\nRetrieval Match:", match_level)
-
-print("\nQuestion:")
-print(question)
-
-print("\nRetrieved information:")
-
-for document in results["documents"][0]:
-    print("\n---")
-    print(document)
 
 context = "\n\n".join(results["documents"][0])
 
@@ -119,5 +104,10 @@ response = ollama.chat(
     think=False
 )
 
-print("\nAI Answer:")
+print("\n" + "=" * 40)
+print("           SCAM ANALYSIS")
+print("=" * 40)
+
 print(response["message"]["content"])
+
+print("=" * 40)

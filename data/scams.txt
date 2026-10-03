@@ -1,11 +1,38 @@
-﻿Phishing scams are attempts to trick people into revealing sensitive information such as passwords, banking credentials, OTPs, or credit card information. Phishing messages often create a sense of urgency and may contain suspicious links.
+﻿Scam Type: Phishing Scam
 
-A common warning sign of a phishing message is a request to click an unfamiliar link. Attackers may use messages claiming that an account will be blocked or suspended unless the recipient takes immediate action.
+Warning Signs:
+- Phishing scams try to trick people into revealing passwords, banking credentials, OTPs, or credit card information.
+- Phishing messages may contain suspicious or unfamiliar links.
+- Messages may create a sense of urgency.
+- A message may claim that an account will be blocked or suspended unless the recipient takes immediate action.
 
-Fake job scams often promise unusually high salaries for simple work. They may ask applicants to pay registration fees, training fees, security deposits, or other charges before receiving employment.
+Advice:
+- Verify account-related claims using official sources before sharing sensitive information.
+- Be cautious when a message asks you to click an unfamiliar link.
 
-A legitimate employer generally does not require applicants to pay money in order to receive a job offer. Requests for payment during recruitment should be treated as a warning sign.
 
-Investment scams may promise guaranteed or unusually high returns with little or no risk. Scammers may pressure victims to invest quickly or transfer money to personal accounts.
+Scam Type: Fake Job Scam
 
-People should verify financial or employment claims using official sources before sending money or sharing sensitive information.
+Warning Signs:
+- Fake job scams may promise unusually high salaries for simple work.
+- They may ask applicants to pay registration fees.
+- They may ask applicants to pay training fees.
+- They may ask applicants to pay security deposits.
+- Requests for payment during recruitment are a warning sign.
+
+Advice:
+- A legitimate employer generally does not require applicants to pay money in order to receive a job offer.
+- Treat requests for payment during recruitment as a warning sign.
+
+
+Scam Type: Investment Scam
+
+Warning Signs:
+- Investment scams may promise guaranteed returns.
+- They may promise unusually high returns with little or no risk.
+- Scammers may pressure people to invest quickly.
+- They may ask people to transfer money to personal accounts.
+
+Advice:
+- Verify financial claims using official sources before sending money.
+- Be cautious of guaranteed or unusually high returns with little or no risk.

@@ -70,6 +70,29 @@ print("\nRetrieval Match:", match_level)
 context = "\n\n".join(results["documents"][0])
 sources = results["metadatas"][0]
 
+if best_distance >= 1.5:
+    print("\nNo relevant information found in the knowledge base.")
+
+    print("\n" + "=" * 40)
+    print("           SCAM ANALYSIS")
+    print("=" * 40)
+
+    print("Scam Type: Unknown")
+    print("Risk Level: Unknown")
+    print("\nReason:")
+    print("The knowledge base does not contain enough information to analyze this question.")
+
+    print("\nAdvice:")
+    print("Unknown")
+
+    print("\nSources:")
+    for i, source in enumerate(sources, start=1):
+        print(f"[{i}] {source['source']} - Chunk {source['chunk']}")
+
+    print("=" * 40)
+
+    exit()
+
 prompt = f"""
 You are a scam-awareness assistant.
 

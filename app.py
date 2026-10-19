@@ -4,14 +4,12 @@ import ollama
 import re
 from sentence_transformers import SentenceTransformer
 
-
 # 1. Read and clean the knowledge base
 with open("data/scams.txt", "r", encoding="utf-8-sig") as file:
     text = file.read()
 
 text = re.sub(r"\s+", " ", text).strip()
 sentences = re.split(r"(?<=[.!?])\s+", text)
-
 
 # 2. Split text into chunks
 chunks = []
@@ -28,11 +26,9 @@ for sentence in sentences:
 if current_chunk.strip():
     chunks.append(current_chunk.strip())
 
-
 # 3. Create embeddings
 model = SentenceTransformer("all-MiniLM-L6-v2")
 embeddings = model.encode(chunks)
-
 
 # 4. Connect to ChromaDB
 client = chromadb.PersistentClient(path="./chroma_db")
@@ -40,7 +36,6 @@ client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_or_create_collection(
     name="Scam_knowledge"
 )
-
 
 # 5. Store chunks if the collection is empty
 if collection.count() == 0:
@@ -57,7 +52,6 @@ if collection.count() == 0:
 else:
     print("Chunks already exist in ChromaDB.")
 
-
 # 6. Get the user's question
 question = input("\nEnter your question: ")
 
@@ -67,12 +61,11 @@ question_embedding = model.encode(question).tolist()
 # 7. Retrieve relevant chunks
 results = collection.query(
     query_embeddings=[question_embedding],
-    n_results=2,
+    n_results=4,
     include=["documents", "distances", "metadatas"]
 )
 
 best_distance = results["distances"][0][0]
-
 
 # 8. Display retrieval match
 if best_distance < 1.2:
@@ -86,7 +79,6 @@ print("\nRetrieval Match:", match_level)
 
 context = "\n\n".join(results["documents"][0])
 sources = results["metadatas"][0]
-
 
 # 9. Handle weak retrieval
 if best_distance >= 1.5:
@@ -106,7 +98,6 @@ if best_distance >= 1.5:
     print("=" * 40)
     raise SystemExit
 
-
 # 10. Check whether the question contains a known warning sign
 question_lower = question.lower()
 
@@ -114,48 +105,93 @@ warning_signs = {
     "Phishing": [
         "password",
         "banking credentials",
+        "bank details",
         "otp",
+        "one time password",
         "credit card",
+        "debit card",
         "suspicious link",
         "unfamiliar link",
+        "unknown link",
+        "click this link",
+        "click a link",
         "account blocked",
         "account suspended",
-        "click a link",
+        "account will be blocked",
+        "verify your account",
+        "verify your identity",
         "urgent",
+        "act immediately",
+        "share your otp",
+        "enter your password",
     ],
     "Fake Job Scam": [
         "high salary",
         "high salaries",
+        "huge salary",
+        "high-paying job",
+        "high paying job",
+        "easy money",
         "registration fee",
+        "registration fees",
         "training fee",
+        "training fees",
         "security deposit",
+        "joining fee",
+        "application fee",
         "pay money",
         "pay a fee",
+        "pay before joining",
         "payment",
+        "pay to get the job",
+        "money to get the job",
+        "job offer fee",
     ],
     "Investment Scam": [
         "guaranteed returns",
         "guaranteed high returns",
+        "guaranteed profit",
+        "guaranteed profits",
         "high returns",
         "unusually high returns",
+        "huge profits",
         "little or no risk",
+        "no risk",
+        "risk-free investment",
         "invest quickly",
         "invest immediately",
+        "limited-time investment",
+        "double your money",
         "transfer money",
         "personal account",
+        "assured returns",
+        "assured profit",
+        "double my money",
+        "double your investment",
     ],
 }
 
-matched_category = None
+matched_categories = []
+matched_signs_by_category = {}
 
 for category, signs in warning_signs.items():
-    if any(sign in question_lower for sign in signs):
-        matched_category = category
-        break
+    matched_signs = [
+        sign for sign in signs
+        if sign in question_lower
+    ]
 
+    if matched_signs:
+        matched_categories.append(category)
+        matched_signs_by_category[category] = matched_signs
+
+matched_category = (
+    matched_categories[0]
+    if len(matched_categories) == 1
+    else None
+)
 
 # 11. Handle questions without a recognized warning sign
-if matched_category is None:
+if not matched_categories:
     print("\n" + "=" * 40)
     print("           SCAM ANALYSIS")
     print("=" * 40)
@@ -166,29 +202,44 @@ if matched_category is None:
         "The retrieved information does not provide enough "
         "evidence to analyze this situation."
     )
+    print("\nWarning Signs Detected:")
+    print("No recognized warning signs detected.")
     print("\nAdvice:")
     print("Unknown")
     print("=" * 40)
     raise SystemExit
 
+# Prepare the categories detected from the user's question
+if len(matched_categories) == 1:
+    category_instruction = matched_categories[0]
+else:
+    category_instruction = ", ".join(matched_categories)
 
 # 12. Generate the scam analysis
+
 prompt = f"""
 You are a scam-awareness assistant.
 
-Analyze the user's question using ONLY the provided Information.
+Analyze the user's question using ONLY the provided Information
+and the detected warning-sign categories.
 
 IMPORTANT RULES:
 1. Use only facts explicitly stated in the Information.
 2. Do not add outside knowledge.
-3. Do not invent facts, warning signs, or advice.
-4. Identify a scam type only when the Information supports it.
-5. Use Unknown if there is insufficient evidence for a field.
-6. Assign HIGH risk when multiple strong warning signs are present.
-7. Assign MEDIUM risk when a warning sign is present but evidence is limited.
-8. Keep the answer short and clear.
-9. Do not include the Advice section in your response.
-10. Follow the exact output format.
+3. Do not invent warning signs or advice.
+4. Consider these categories detected from the user's question:
+   {category_instruction}
+5. If one category is detected, report that category if supported
+   by the Information.
+6. If multiple categories are detected, list all supported categories.
+7. Do not force a single category when multiple are supported.
+8. Assign HIGH risk when multiple strong warning signs are present.
+9. Assign MEDIUM risk when warning signs exist but evidence is limited.
+10. Use Unknown if there is insufficient evidence.
+11. Keep the answer short and clear.
+12. Do not include the Advice section in your response.
+13. Do not put square brackets around the output values.
+14. Follow the exact output format.
 
 Information:
 {context}
@@ -198,11 +249,11 @@ User question:
 
 Output format:
 
-Scam Type: [Phishing / Fake Job Scam / Investment Scam / Other / Unknown]
+Scam Type: [supported scam category or categories, or Unknown]
 Risk Level: [LOW / MEDIUM / HIGH / Unknown]
 
 Reason:
-[Explain briefly using only the Information.]
+[Brief explanation based only on the Information.]
 """
 
 response = ollama.chat(
@@ -216,8 +267,7 @@ response = ollama.chat(
     think=False
 )
 
-
-# 13. Extract advice directly from retrieved knowledge
+# 13. Extract advice relevant to all detected categories
 advice_lines = []
 
 for chunk in results["documents"][0]:
@@ -227,29 +277,24 @@ for chunk in results["documents"][0]:
         flags=re.IGNORECASE
     )
 
-    if match:
-        advice_part = match.group(1)
+    if not match:
+        continue
 
-        # Split bullet points whether they are on one line or several lines
-        items = re.split(r"\s+-\s+", advice_part)
+    advice_part = match.group(1)
+    items = re.split(r"\s+-\s+", advice_part)
 
-        for item in items:
-            item = item.strip()
+    for item in items:
+        item = item.strip().lstrip("- ").strip()
 
-            if item:
-                advice_lines.append(item)
-
-# Remove duplicate advice while preserving order
-advice_lines = list(dict.fromkeys(advice_lines))
+        if item and item not in advice_lines:
+            advice_lines.append(item)
 
 if advice_lines:
     grounded_advice = "\n".join(
-        f"- {advice.lstrip('- ').strip()}"
-        for advice in advice_lines
-)
+        f"- {advice}" for advice in advice_lines
+    )
 else:
     grounded_advice = "Unknown"
-
 
 # 14. Display the final analysis
 answer = response["message"]["content"].strip()
@@ -267,6 +312,17 @@ print("           SCAM ANALYSIS")
 print("=" * 40)
 
 print(answer)
+
+# Display warning signs detected in the user's question
+print("\nWarning Signs Detected:")
+
+if matched_signs_by_category:
+    for category, signs in matched_signs_by_category.items():
+        print(f"{category}:")
+        for sign in signs:
+            print(f"- {sign.capitalize()}")
+else:
+    print("No recognized warning signs detected.")
 
 print("\nAdvice:")
 print(grounded_advice)

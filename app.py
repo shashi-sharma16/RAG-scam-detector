@@ -59,9 +59,10 @@ question_embedding = model.encode(question).tolist()
 
 
 # 7. Retrieve relevant chunks
+
 results = collection.query(
     query_embeddings=[question_embedding],
-    n_results=4,
+    n_results=min(8, collection.count()),
     include=["documents", "distances", "metadatas"]
 )
 
@@ -267,20 +268,34 @@ response = ollama.chat(
     think=False
 )
 
-# 13. Extract advice relevant to all detected categories
+
+# 13. Extract advice directly from the complete knowledge base
 advice_lines = []
 
-for chunk in results["documents"][0]:
-    match = re.search(
-        r"\bAdvice:\s*(.*)",
-        chunk,
-        flags=re.IGNORECASE
+for category in matched_categories:
+    # Find the complete section for this scam category
+    section_match = re.search(
+        rf"Scam Type:\s*{re.escape(category)}\b(.*?)(?=Scam Type:|$)",
+        text,
+        flags=re.IGNORECASE | re.DOTALL
     )
 
-    if not match:
+    if not section_match:
         continue
 
-    advice_part = match.group(1)
+    # Extract the Advice section from that category
+    advice_match = re.search(
+        r"\bAdvice:\s*(.*)",
+        section_match.group(1),
+        flags=re.IGNORECASE | re.DOTALL
+    )
+
+    if not advice_match:
+        continue
+
+    advice_part = advice_match.group(1)
+
+    # Separate individual advice bullets
     items = re.split(r"\s+-\s+", advice_part)
 
     for item in items:
@@ -306,6 +321,17 @@ answer = re.split(
     maxsplit=1,
     flags=re.IGNORECASE
 )[0].strip()
+
+# Ensure all detected scam categories appear in the final answer
+if matched_categories:
+    detected_type = ", ".join(matched_categories)
+
+    answer = re.sub(
+        r"(?im)^Scam Type\s*:.*$",
+        f"Scam Type: {detected_type}",
+        answer,
+        count=1
+    )
 
 print("\n" + "=" * 40)
 print("           SCAM ANALYSIS")

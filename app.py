@@ -205,6 +205,7 @@ response = ollama.chat(
     think=False
 )
 
+
 # Extract advice directly from retrieved knowledge
 advice_lines = []
 
@@ -212,11 +213,17 @@ for chunk in results["documents"][0]:
     if "Advice:" in chunk:
         advice_part = chunk.split("Advice:", 1)[1]
 
-        for line in advice_part.splitlines():
-            line = line.strip()
+        # Handle advice items on separate lines or the same line
+        items = re.split(r"\s*-\s+", advice_part)
 
-            if line.startswith("-"):
-                advice_lines.append(line[1:].strip())
+        for item in items:
+            item = item.strip()
+
+            if item:
+                advice_lines.append(item)
+
+# Remove duplicate advice
+advice_lines = list(dict.fromkeys(advice_lines))
 
 if advice_lines:
     grounded_advice = "\n".join(

@@ -103,7 +103,7 @@ if best_distance >= 1.5:
 question_lower = question.lower()
 
 warning_signs = {
-    "Phishing": [
+    "Phishing Scam": [
         "password",
         "banking credentials",
         "bank details",

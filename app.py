@@ -322,6 +322,29 @@ answer = re.split(
     flags=re.IGNORECASE
 )[0].strip()
 
+# Determine risk level using Python
+total_warning_signs = sum(
+    len(signs)
+    for signs in matched_signs_by_category.values()
+)
+
+if not matched_categories:
+    risk_level = "Unknown"
+elif total_warning_signs >= 2:
+    risk_level = "HIGH"
+elif total_warning_signs == 1:
+    risk_level = "MEDIUM"
+else:
+    risk_level = "Unknown"
+
+# Replace the model's risk level with the Python-calculated value
+answer = re.sub(
+    r"(?im)^Risk Level\s*:.*$",
+    f"Risk Level: {risk_level}",
+    answer,
+    count=1
+)
+
 # Ensure all detected scam categories appear in the final answer
 if matched_categories:
     detected_type = ", ".join(matched_categories)

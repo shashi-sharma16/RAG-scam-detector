@@ -36,3 +36,45 @@ Warning Signs:
 Advice:
 - Verify financial claims using official sources before sending money.
 - Be cautious of guaranteed or unusually high returns with little or no risk.
+
+
+Scam Type: Impersonation Scam
+
+Warning Signs:
+- Someone pretends to be a bank employee, government official, police officer, or company representative.
+- The person claims there is an urgent problem with your account or identity.
+- The person asks for passwords, OTPs, banking credentials, or other sensitive information.
+- The person pressures you to act immediately without independently verifying their identity.
+
+Advice:
+- Contact the organization using its official contact details to verify the person's identity.
+- Never share passwords, OTPs, or banking credentials with someone claiming to represent an organization.
+- Do not make payments based solely on an unverified person's claims.
+
+
+Scam Type: Payment Fraud
+
+Warning Signs:
+- A buyer sends a payment screenshot but the money does not appear in your account.
+- Someone claims a payment is complete and pressures you to release goods before verifying receipt.
+- Someone asks you to scan a QR code or approve a payment request to receive money.
+- Payment details or transaction confirmations appear inconsistent or cannot be verified.
+
+Advice:
+- Check your bank account or official payment application to confirm that money has actually arrived.
+- Do not rely solely on screenshots or messages as proof of payment.
+- Never approve a payment request or share sensitive banking information without understanding what you are authorizing.
+
+
+Scam Type: Romance Scam
+
+Warning Signs:
+- Someone you met online quickly develops a romantic relationship and asks for money.
+- The person requests money for an emergency, medical treatment, travel, or another urgent expense.
+- The person repeatedly requests financial help but avoids reasonable attempts to verify their identity.
+- The person pressures you to send money or keep the relationship and financial requests secret.
+
+Advice:
+- Verify the person's identity and be cautious when an online relationship develops unusually quickly.
+- Do not send money to someone whose identity or circumstances you cannot independently verify.
+- Talk to someone you trust before responding to urgent financial requests from an online romantic partner.

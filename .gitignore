@@ -1,8 +1,9 @@
 .venv/
 .vscode/
 __pycache__/
+*.py[cod]
 chroma_db/
 *.pyc
 .env
-
-chroma_db/
+.env.*
+!.env.example

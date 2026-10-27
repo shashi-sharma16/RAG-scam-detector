@@ -74,6 +74,7 @@
             background: rgba(8, 13, 24, .88);
             min-height: 100vh;
             height: 100vh;
+            overflow-y: auto;
         }
 
         .brand {
@@ -942,6 +943,34 @@
             margin-bottom: 4px !important;
             line-height: 1.5 !important;
         }
+
+        /* Subtle sidebar scrollbar */
+.sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.sidebar:hover {
+    scrollbar-color: #454545 transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb {
+    background: #454545;
+}
+
     </style>
 </head>
 

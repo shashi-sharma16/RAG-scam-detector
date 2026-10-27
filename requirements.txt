@@ -1,2 +1,4 @@
+Flask
 chromadb
 sentence-transformers
+ollama

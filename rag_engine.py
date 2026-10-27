@@ -178,7 +178,13 @@ def analyze_message(question):
     )
 
     best_distance = results["distances"][0][0]
-    sources = results["metadatas"][0]
+    sources = list(
+    dict.fromkeys(
+        metadata["source"]
+        for metadata in results["metadatas"][0]
+        if metadata.get("source")
+    )
+)
 
     if best_distance < 1.2:
         match_level = "Strong"
@@ -243,10 +249,29 @@ Reason: A short explanation based only on the information.
 
     total_signs = sum(len(signs) for signs in matched_signs.values())
 
-    if total_signs >= 2:
+    all_signs_text = " ".join(
+        sign.lower()
+        for signs in matched_signs.values()
+        for sign in signs
+    )
+
+    critical_keywords = [
+        "otp",
+        "one-time password",
+        "banking password",
+        "bank password",
+        "share your password",
+        "enter your password",
+    ]
+
+    if any(keyword in all_signs_text for keyword in critical_keywords):
+        risk_level = "CRITICAL"
+    elif total_signs >= 3:
         risk_level = "HIGH"
-    else:
+    elif total_signs >= 1:
         risk_level = "MEDIUM"
+    else:
+        risk_level = "LOW"
 
     all_warning_signs = [
         f"{category}: {sign}"

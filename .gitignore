@@ -1,9 +1,35 @@
-.venv/
-.vscode/
+
+# Python cache
 __pycache__/
 *.py[cod]
-chroma_db/
-*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
 .env
 .env.*
 !.env.example
+
+# Local databases and vector stores
+*.db
+*.sqlite3
+chroma_db/
+chroma.sqlite3
+
+# Logs
+*.log
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test and coverage files
+.pytest_cache/
+.coverage
+htmlcov/

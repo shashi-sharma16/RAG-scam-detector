@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080d18">
+    <title>RAG Sentinel | Scam Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #080d18;
+            --panel: #0e1726;
+            --panel-2: #111d2e;
+            --border: #203147;
+            --teal: #43f5d0;
+            --teal-dim: #1cae9b;
+            --text: #eaf4fa;
+            --muted: #8498ae;
+            --purple: #9d8cff;
+            --mono: "DM Mono", monospace;
+            --font: "Manrope", sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: var(--font);
+            background:
+                radial-gradient(ellipse at 72% 0%, #102b3a 0%, transparent 34%),
+                radial-gradient(ellipse at 20% 90%, #101c36 0%, transparent 36%),
+                var(--bg);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            opacity: .17;
+            background-image:
+                linear-gradient(#2c5266 1px, transparent 1px),
+                linear-gradient(90deg, #2c5266 1px, transparent 1px);
+            background-size: 38px 38px;
+            mask-image: linear-gradient(to bottom, black, transparent 85%);
+        }
+
+        a { color: inherit; }
+
+        .app {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 27px 18px 20px;
+            border-right: 1px solid var(--border);
+            background: rgba(8, 13, 24, .88);
+            min-height: 100vh;
+            height: 100vh;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 7px 31px;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            border: 1px solid #3ce8cc;
+            border-radius: 13px;
+            color: var(--teal);
+            background: linear-gradient(145deg, #123a3d, #0b1828);
+            box-shadow: 0 0 24px #43f5d01a, inset 0 0 14px #43f5d014;
+            font-size: 20px;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+        }
+
+        .brand-name span { color: var(--teal); }
+
+        .brand-caption {
+            margin-top: 3px;
+            color: var(--muted);
+            font: 9px var(--mono);
+            letter-spacing: 1.8px;
+        }
+
+        .nav-label {
+            margin: 10px 10px 12px;
+            color: #627991;
+            font: 10px var(--mono);
+            letter-spacing: 1.8px;
+        }
+
+        nav { display: flex; flex-direction: column; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 5px;
+            padding: 12px 13px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            color: #8fa3b8;
+            font-size: 12px;
+            text-decoration: none;
+            transition: .2s ease;
+        }
+
+        .nav-item i { width: 17px; text-align: center; }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--teal);
+            border-color: #43f5d01c;
+            background: linear-gradient(90deg, #43f5d012, #43f5d004);
+        }
+
+        .nav-item.active {
+            box-shadow: inset 2px 0 var(--teal);
+        }
+
+        .sidebar-spacer { flex: 1; }
+
+        .system-card {
+            padding: 15px 13px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: #0b1422;
+        }
+
+        .system-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            color: #b7c8d8;
+            font: 10px var(--mono);
+            letter-spacing: .7px;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 10px var(--teal);
+        }
+
+        .system-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 11px;
+            color: #71859b;
+            font: 9px var(--mono);
+        }
+
+        .system-line span:last-child { color: var(--teal); }
+
+        .side-footer {
+            padding: 14px 5px 0;
+            color: #50657b;
+            font: 9px/1.9 var(--mono);
+            letter-spacing: .4px;
+        }
+
+        /* MAIN DASHBOARD */
+
+        .main { min-width: 0; padding: 0 35px 35px; }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-height: 75px;
+            border-bottom: 1px solid #203147a6;
+        }
+
+        .breadcrumb {
+            color: #71869b;
+            font: 10px var(--mono);
+            letter-spacing: .8px;
+        }
+
+        .breadcrumb span { color: var(--teal); }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .environment {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: #a4b8ca;
+            font: 9px var(--mono);
+            letter-spacing: .5px;
+        }
+
+        .environment i { color: var(--teal); }
+
+        .avatar {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border: 1px solid #294056;
+            border-radius: 10px;
+            color: var(--teal);
+            background: #111d2e;
+        }
+
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 25px;
+            padding: 42px 0 31px;
+        }
+
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 14px;
+            color: var(--teal);
+            font: 10px var(--mono);
+            letter-spacing: 2px;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 22px;
+            height: 1px;
+            background: var(--teal);
+            box-shadow: 0 0 9px var(--teal);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(29px, 3.2vw, 43px);
+            font-weight: 800;
+            line-height: 1.16;
+            letter-spacing: -1.8px;
+        }
+
+        .glow {
+            color: var(--teal);
+            text-shadow: 0 0 28px #43f5d027;
+        }
+
+        .hero p {
+            max-width: 570px;
+            margin: 15px 0 0;
+            color: #91a4b8;
+            font-size: 12px;
+            line-height: 1.9;
+        }
+
+        .version {
+            flex-shrink: 0;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #8498ae;
+            font: 9px var(--mono);
+        }
+
+        /* METRICS */
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 13px;
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+            padding: 17px 18px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: linear-gradient(145deg, #101c2b, #0c1523);
+        }
+
+        .metric::after {
+            content: "";
+            position: absolute;
+            right: -25px;
+            bottom: -45px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #43f5d009;
+            filter: blur(8px);
+        }
+
+        .metric-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: #91a5ba;
+            font: 9px var(--mono);
+            letter-spacing: .7px;
+        }
+
+        .metric-top i { color: var(--teal); font-size: 13px; }
+
+        .metric-value {
+            margin-top: 14px;
+            color: #e7f2fa;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+        }
+
+        .metric-note {
+            margin-top: 5px;
+            color: #637991;
+            font: 8px var(--mono);
+            letter-spacing: .5px;
+        }
+
+        /* WORKSPACE */
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 17px;
+            align-items: stretch;
+        }
+
+        .panel {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(14, 23, 38, .94);
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 57px;
+            padding: 15px 19px;
+            border-bottom: 1px solid var(--border);
+            background: #101b2b;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d8e7f1;
+            font: 11px var(--mono);
+            letter-spacing: .8px;
+        }
+
+        .panel-title i { color: var(--teal); }
+
+        .panel-code {
+            color: #5c748d;
+            font: 9px var(--mono);
+        }
+
+        .panel-body { padding: 19px; }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .field-label label {
+            color: #b9cbd9;
+            font: 10px var(--mono);
+            letter-spacing: .7px;
+        }
+
+        .field-label small {
+            color: #6f859a;
+            font: 9px var(--mono);
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 228px;
+            resize: vertical;
+            padding: 15px;
+            border: 1px solid #294057;
+            border-radius: 8px;
+            outline: none;
+            color: #e3f0f8;
+            background: #080f1c;
+            font: 11px/1.8 var(--mono);
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        textarea::placeholder { color: #50667e; }
+
+        textarea:focus {
+            border-color: #43f5d080;
+            box-shadow: 0 0 0 3px #43f5d00b;
+        }
+
+        .input-foot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 11px;
+            color: #637b91;
+            font: 9px/1.6 var(--mono);
+        }
+
+        .input-foot i { color: var(--teal); }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .scan-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+            min-height: 45px;
+            padding: 12px 15px;
+            border: 1px solid var(--teal);
+            border-radius: 7px;
+            color: #061512;
+            background: var(--teal);
+            font: 11px var(--mono);
+            font-weight: 500;
+            letter-spacing: .6px;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .scan-button:hover {
+            background: #78ffe5;
+            box-shadow: 0 0 25px #43f5d024;
+        }
+
+        .scan-button:disabled {
+            opacity: .65;
+            cursor: wait;
+        }
+
+        .clear-button {
+            display: grid;
+            place-items: center;
+            width: 45px;
+            flex-shrink: 0;
+            border: 1px solid #2a3d52;
+            border-radius: 7px;
+            color: #8ca2b8;
+            background: #111d2d;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .clear-button:hover {
+            border-color: #43f5d080;
+            color: var(--teal);
+        }
+
+        .notice {
+            display: none;
+            margin-top: 13px;
+            padding: 11px 12px;
+            border: 1px solid #f8717138;
+            border-radius: 7px;
+            color: #fca5a5;
+            background: #7f1d1d14;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .notice.visible { display: block; }
+
+        /* RESULTS */
+
+        .result-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .result-topline p {
+            margin: 0;
+            color: #8196ac;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            max-width: 60%;
+            padding: 7px 9px;
+            border: 1px solid #294056;
+            border-radius: 6px;
+            color: #91a5ba;
+            background: #0b1522;
+            font: 9px var(--mono);
+            overflow-wrap: anywhere;
+        }
+
+        .result-badge::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #7c8da1;
+        }
+
+        .result-badge.high {
+            border-color: #fb718540;
+            color: #fda4af;
+        }
+
+        .result-badge.high::before {
+            background: #fb7185;
+            box-shadow: 0 0 8px #fb7185;
+        }
+
+        .result-badge.medium {
+            border-color: #fbbf2440;
+            color: #fcd34d;
+        }
+
+        .result-badge.medium::before {
+            background: #fbbf24;
+            box-shadow: 0 0 8px #fbbf24;
+        }
+
+        .result-badge.low {
+            border-color: #43f5d040;
+            color: var(--teal);
+        }
+
+        .result-badge.low::before {
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            padding: 25px 15px;
+            border: 1px dashed #2b4055;
+            border-radius: 9px;
+            text-align: center;
+            background:
+                radial-gradient(ellipse at center, #14302c30, transparent 65%),
+                #0b1421;
+        }
+
+        .empty-icon {
+            display: grid;
+            place-items: center;
+            width: 62px;
+            height: 62px;
+            margin-bottom: 18px;
+            border: 1px solid #43f5d030;
+            border-radius: 18px;
+            color: var(--teal);
+            background: #43f5d00b;
+            font-size: 22px;
+            box-shadow: 0 0 30px #43f5d00a;
+        }
+
+        .empty-state h3 {
+            margin: 0;
+            color: #d8e6f0;
+            font-size: 14px;
+        }
+
+        .empty-state p {
+            max-width: 260px;
+            margin: 9px 0 0;
+            color: #71869b;
+            font-size: 10px;
+            line-height: 1.8;
+        }
+
+        .empty-state .ready-line {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 21px;
+            color: #7891a6;
+            font: 9px var(--mono);
+        }
+
+        .ready-line span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
+        }
+
+        .result-output { display: none; }
+
+        .result-output.visible { display: block; }
+
+        .result-section {
+            margin-bottom: 16px;
+            padding: 13px 14px;
+            border: 1px solid #24364a;
+            border-radius: 8px;
+            background: #0b1421;
+        }
+
+        .result-section:last-child { margin-bottom: 0; }
+
+        .result-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 7px;
+            color: var(--teal);
+            font: 10px var(--mono);
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+        .result-section h3::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            flex-shrink: 0;
+            border-radius: 1px;
+            background: var(--teal);
+            box-shadow: 0 0 7px #43f5d05c;
+        }
+
+        .result-section p {
+            margin: 0 0 5px;
+            color: #c3d2df;
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .result-section ul {
+            margin: 3px 0 5px;
+            padding-left: 18px;
+            color: #b5c6d5;
+        }
+
+        .result-section li {
+            margin-bottom: 4px;
+            padding-left: 2px;
+            font-size: 10px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .result-section li:last-child { margin-bottom: 0; }
+
+        .result-section li::marker { color: var(--teal-dim); }
+
+        .bottom-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 17px;
+            padding: 12px 14px;
+            border: 1px solid #263a50;
+            border-radius: 8px;
+            color: #8095aa;
+            background: #0b1420;
+            font-size: 10px;
+            line-height: 1.7;
+        }
+
+        .bottom-note i {
+            margin-top: 2px;
+            color: var(--teal);
+        }
+
+        /* EXTRA SECTIONS */
+
+        .extra-section {
+            margin-top: 23px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: #0e1726d9;
+        }
+
+        .extra-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 15px;
+            color: #d8e7f1;
+            font: 11px var(--mono);
+            letter-spacing: .7px;
+        }
+
+        .extra-heading i { color: var(--teal); }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 11px;
+        }
+
+        .example-card {
+            padding: 14px;
+            border: 1px solid #263a50;
+            border-radius: 8px;
+            background: #0b1421;
+        }
+
+        .example-card h4 {
+            margin: 0 0 8px;
+            color: #c5d7e5;
+            font-size: 11px;
+        }
+
+        .example-card p {
+            margin: 0;
+            color: #7e94aa;
+            font-size: 10px;
+            line-height: 1.8;
+        }
+
+        .example-use {
+            display: inline-block;
+            margin-top: 12px;
+            color: var(--teal);
+            font: 9px var(--mono);
+            cursor: pointer;
+        }
+
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .pipeline-step {
+            position: relative;
+            padding: 14px 12px;
+            border: 1px solid #263a50;
+            border-radius: 8px;
+            background: #0b1421;
+        }
+
+        .pipeline-step span {
+            color: var(--teal);
+            font: 9px var(--mono);
+        }
+
+        .pipeline-step h4 {
+            margin: 9px 0 6px;
+            color: #c8d9e6;
+            font-size: 11px;
+        }
+
+        .pipeline-step p {
+            margin: 0;
+            color: #748ba1;
+            font-size: 9px;
+            line-height: 1.7;
+        }
+
+        .about-text {
+            max-width: 850px;
+            margin: 0;
+            color: #8da2b6;
+            font-size: 11px;
+            line-height: 1.9;
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 27px;
+            padding-top: 18px;
+            border-top: 1px solid #203147a6;
+            color: #5c7187;
+            font: 9px var(--mono);
+        }
+
+        .footer span { color: var(--teal); }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1150px) {
+            .app { grid-template-columns: 220px minmax(0, 1fr); }
+            .main { padding-right: 23px; padding-left: 23px; }
+            .workspace { grid-template-columns: minmax(0, 1fr); }
+            .result-panel .panel-body { min-height: auto; }
+            .examples-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 760px) {
+            .app { display: block; }
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                padding: 16px;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .brand { padding: 0 5px 12px; }
+            .sidebar nav {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 5px;
+            }
+            .nav-label { grid-column: 1 / -1; margin: 9px 5px 5px; }
+            .nav-item { margin: 0; padding: 10px; }
+            .sidebar-spacer, .system-card, .side-footer { display: none; }
+            .main { padding: 0 16px 25px; }
+            .topbar { min-height: 60px; }
+            .hero { align-items: flex-start; padding: 30px 0 24px; }
+            .version { display: none; }
+            .metrics { grid-template-columns: 1fr; gap: 9px; }
+            .metric { padding: 13px 15px; }
+            .metric-value { margin-top: 8px; }
+            .metric-note { font-size: 8px; }
+            .examples-grid { grid-template-columns: 1fr; }
+            .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .footer { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 480px) {
+            .environment { display: none; }
+            .main { padding-right: 12px; padding-left: 12px; }
+            .hero h1 { font-size: 30px; }
+            .hero p { font-size: 11px; }
+            .panel-head { padding: 13px; }
+            .panel-body { padding: 13px; }
+            textarea { min-height: 205px; padding: 12px; }
+            .result-section { padding: 11px; }
+            .pipeline { grid-template-columns: 1fr; }
+            .metric-value { font-size: 18px; }
+        }
+
+        @media (max-width: 390px) {
+            .environment { display: none; }
+            .metrics { grid-template-columns: 1fr; }
+            .metric { display: flex; align-items: center; justify-content: space-between; }
+            .metric-value { margin-top: 0; }
+            .metric-note { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
+        /* Keep analysis output compact */
+        .result-section p {
+            margin-top: 0 !important;
+            margin-bottom: 5px !important;
+            line-height: 1.5 !important;
+        }
+
+        .result-section h3 {
+            margin-top: 0 !important;
+            margin-bottom: 5px !important;
+        }
+
+        .result-section ul {
+            margin-top: 3px !important;
+            margin-bottom: 5px !important;
+        }
+
+        .result-section li {
+            margin-bottom: 4px !important;
+            line-height: 1.5 !important;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <div class="brand-name">RAG<span>SENTINEL</span></div>
+                <div class="brand-caption">SCAM INTELLIGENCE</div>
+            </div>
+        </div>
+
+        <nav>
+            <div class="nav-label">WORKSPACE</div>
+
+            <a class="nav-item active" href="#scanner">
+                <i class="fa-solid fa-crosshairs"></i> Threat Scanner
+            </a>
+
+            <a class="nav-item" href="#results">
+                <i class="fa-solid fa-chart-line"></i> Analysis Results
+            </a>
+
+            <a class="nav-item" href="#pipeline">
+                <i class="fa-solid fa-diagram-project"></i> RAG Pipeline
+            </a>
+
+            <div class="nav-label" style="margin-top:28px">INTELLIGENCE</div>
+
+            <a class="nav-item" href="#examples">
+                <i class="fa-solid fa-fingerprint"></i> Scam Patterns
+            </a>
+
+            <a class="nav-item" href="#about">
+                <i class="fa-solid fa-circle-info"></i> About Sentinel
+            </a>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="system-card">
+            <div class="system-heading">
+                <span class="live-dot"></span>
+                LOCAL ENVIRONMENT
+            </div>
+            <div class="system-line"><span>INTERFACE</span><span>READY</span></div>
+            <div class="system-line"><span>RAG CONNECTION</span><span id="ragStatus">PENDING</span></div>
+            <div class="system-line"><span>MODE</span><span>LOCAL AI</span></div>
+        </div>
+
+        <div class="side-footer">
+            RAG SENTINEL / WEB CONSOLE<br>
+            BUILD 01.00 · PERSONAL PROJECT
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="breadcrumb">CONSOLE / <span>THREAT ANALYSIS</span></div>
+            <div class="top-actions">
+                <div class="environment">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    LOCAL WORKSPACE
+                </div>
+                <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div>
+                <div class="eyebrow">YOUR DIGITAL DEFENCE LAYER</div>
+                <h1>Think twice.<br><span class="glow">Scan everything.</span></h1>
+                <p>
+                    Inspect suspicious messages, uncover potential scam patterns,
+                    and get evidence-based safety advice powered by your local
+                    Retrieval-Augmented Generation knowledge base.
+                </p>
+            </div>
+            <div class="version">SYSTEM / v1.0</div>
+        </section>
+
+        <section class="metrics" aria-label="Project overview">
+            <div class="metric">
+                <div class="metric-top">DETECTION ENGINE <i class="fa-solid fa-microchip"></i></div>
+                <div class="metric-value">RAG + LLM</div>
+                <div class="metric-note">RETRIEVAL-AUGMENTED ANALYSIS</div>
+            </div>
+
+            <div class="metric">
+                <div class="metric-top">KNOWLEDGE SOURCE <i class="fa-solid fa-database"></i></div>
+                <div class="metric-value">LOCAL KB</div>
+                <div class="metric-note">SCAM REFERENCE MATERIAL</div>
+            </div>
+
+            <div class="metric">
+                <div class="metric-top">PRIVACY MODEL <i class="fa-solid fa-lock"></i></div>
+                <div class="metric-value">LOCAL-FIRST</div>
+                <div class="metric-note">DESIGNED FOR LOCAL ANALYSIS</div>
+            </div>
+        </section>
+
+        <section class="workspace">
+            <article class="panel" id="scanner">
+                <div class="panel-head">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-terminal"></i>
+                        THREAT SCANNER
+                    </div>
+                    <div class="panel-code">INPUT_01</div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="field-label">
+                        <label for="message">SUSPICIOUS MESSAGE</label>
+                        <small id="charCount">0 / 5000</small>
+                    </div>
+
+                    <div class="input-wrap">
+                        <textarea
+                            id="message"
+                            maxlength="5000"
+                            placeholder="Paste a suspicious SMS, email, job offer, investment pitch, or message here...
+
+Example: Congratulations! You have been selected for a high-paying remote job. Pay a refundable registration fee to secure your position."
+                            aria-label="Paste a suspicious message for analysis"
+                        ></textarea>
+                    </div>
+
+                    <div class="input-foot">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Your message is sent to your local Flask analysis endpoint.
+                    </div>
+
+                    <div class="button-row">
+                        <button class="scan-button" id="scanButton" type="button">
+                            <i class="fa-solid fa-bolt"></i>
+                            ANALYZE MESSAGE
+                        </button>
+                        <button class="clear-button" id="clearButton" type="button" title="Clear message" aria-label="Clear message">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+
+                    <div class="notice" id="notice" role="alert"></div>
+                </div>
+            </article>
+
+            <article class="panel result-panel" id="results">
+                <div class="panel-head">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-shield-virus"></i>
+                        SCAN RESULTS
+                    </div>
+                    <div class="panel-code">OUTPUT_02</div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="result-topline">
+                        <p>Analysis summary and evidence</p>
+                        <span class="result-badge" id="resultBadge">AWAITING INPUT</span>
+                    </div>
+
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon"><i class="fa-solid fa-radar"></i></div>
+                        <h3>Awaiting threat analysis</h3>
+                        <p>
+                            Submit a suspicious message to begin scanning.
+                            Results and recommended safety actions will appear here.
+                        </p>
+                        <div class="ready-line"><span></span> SCANNER READY</div>
+                    </div>
+
+                    <div class="result-output" id="resultOutput"></div>
+
+                    <div class="bottom-note">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Important:</strong> This tool provides scam-awareness
+                            guidance based on its knowledge base. Treat results as guidance,
+                            not as a guarantee that a message is safe or fraudulent.
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="extra-section" id="pipeline">
+            <h2 class="extra-heading"><i class="fa-solid fa-diagram-project"></i> RAG PIPELINE</h2>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <span>STEP 01</span>
+                    <h4>Message Input</h4>
+                    <p>The user submits a suspicious message for analysis.</p>
+                </div>
+                <div class="pipeline-step">
+                    <span>STEP 02</span>
+                    <h4>Semantic Retrieval</h4>
+                    <p>Relevant scam knowledge is retrieved from the local vector database.</p>
+                </div>
+                <div class="pipeline-step">
+                    <span>STEP 03</span>
+                    <h4>AI Analysis</h4>
+                    <p>The language model analyzes the question using retrieved context.</p>
+                </div>
+                <div class="pipeline-step">
+                    <span>STEP 04</span>
+                    <h4>Safety Guidance</h4>
+                    <p>The interface presents findings, warning signs, advice, and sources.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="extra-section" id="examples">
+            <h2 class="extra-heading"><i class="fa-solid fa-fingerprint"></i> SCAM PATTERNS / TEST INPUTS</h2>
+
+            <div class="examples-grid">
+                <div class="example-card">
+                    <h4><i class="fa-solid fa-briefcase"></i> Fake Job Offer</h4>
+                    <p>A recruiter promises a high-paying remote job but requests a registration fee to secure the position.</p>
+                    <span class="example-use" data-example="Congratulations! You have been selected for a high-paying remote job. Pay a refundable registration fee to secure your position.">USE TEST MESSAGE ↗</span>
+                </div>
+
+                <div class="example-card">
+                    <h4><i class="fa-solid fa-link"></i> Phishing Message</h4>
+                    <p>A message claims your bank account will be blocked and asks you to click an unfamiliar link and enter your OTP.</p>
+                    <span class="example-use" data-example="Your bank account will be blocked today. Click this suspicious link and enter your OTP to verify your account.">USE TEST MESSAGE ↗</span>
+                </div>
+
+                <div class="example-card">
+                    <h4><i class="fa-solid fa-chart-line"></i> Investment Scam</h4>
+                    <p>An investment pitch guarantees unusually high returns and pressures you to transfer money immediately.</p>
+                    <span class="example-use" data-example="Invest today and get guaranteed high returns with no risk. Transfer your money immediately to secure your profit.">USE TEST MESSAGE ↗</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="extra-section" id="about">
+            <h2 class="extra-heading"><i class="fa-solid fa-circle-info"></i> ABOUT RAG SENTINEL</h2>
+            <p class="about-text">
+                RAG Sentinel is a local scam-awareness project that combines semantic
+                retrieval with language-model analysis. It retrieves relevant information
+                from a scam knowledge base and uses that context to explain potential
+                warning signs and safety actions. The quality of its results depends on
+                the available knowledge, retrieval quality, and analysis logic. Always
+                verify important claims through trusted official channels.
+            </p>
+        </section>
+
+        <footer class="footer">
+            <div>RAG SENTINEL <span>●</span> SCAM INTELLIGENCE CONSOLE</div>
+            <div>LOCAL WORKSPACE · PERSONAL PROJECT</div>
+        </footer>
+    </main>
+</div>
+
+<script>
+    const messageInput = document.getElementById("message");
+    const charCount = document.getElementById("charCount");
+    const scanButton = document.getElementById("scanButton");
+    const clearButton = document.getElementById("clearButton");
+    const notice = document.getElementById("notice");
+    const resultOutput = document.getElementById("resultOutput");
+    const emptyState = document.getElementById("emptyState");
+    const resultBadge = document.getElementById("resultBadge");
+    const ragStatus = document.getElementById("ragStatus");
+
+    messageInput.addEventListener("input", () => {
+        charCount.textContent = `${messageInput.value.length} / 5000`;
+    });
+
+    clearButton.addEventListener("click", () => {
+        messageInput.value = "";
+        charCount.textContent = "0 / 5000";
+        notice.classList.remove("visible");
+        resultOutput.classList.remove("visible");
+        resultOutput.innerHTML = "";
+        emptyState.style.display = "flex";
+        resultBadge.textContent = "AWAITING INPUT";
+        resultBadge.className = "result-badge";
+        messageInput.focus();
+    });
+
+    document.querySelectorAll(".example-use").forEach((example) => {
+        example.addEventListener("click", () => {
+            messageInput.value = example.dataset.example;
+            charCount.textContent = `${messageInput.value.length} / 5000`;
+            messageInput.focus();
+            document.getElementById("scanner").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        });
+    });
+
+    scanButton.addEventListener("click", async () => {
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            notice.textContent = "Please enter a suspicious message before starting the analysis.";
+            notice.classList.add("visible");
+            messageInput.focus();
+            return;
+        }
+
+        scanButton.disabled = true;
+        scanButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ANALYZING...';
+        notice.classList.remove("visible");
+        resultBadge.textContent = "ANALYZING";
+        resultBadge.className = "result-badge";
+
+        try {
+            const response = await fetch("/api/analyze", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Analysis failed.");
+            }
+
+            emptyState.style.display = "none";
+            resultOutput.classList.add("visible");
+            ragStatus.textContent = "CONNECTED";
+
+            const risk = String(data.risk_level || "Unknown").toLowerCase();
+            resultBadge.textContent = data.risk_level || "ANALYSIS COMPLETE";
+            resultBadge.className = "result-badge";
+
+            if (risk.includes("high")) {
+                resultBadge.classList.add("high");
+            } else if (risk.includes("medium")) {
+                resultBadge.classList.add("medium");
+            } else if (risk.includes("low")) {
+                resultBadge.classList.add("low");
+            }
+
+            resultOutput.innerHTML = `
+                <div class="result-section">
+                    <h3>Scam Type</h3>
+                    <p>${escapeHTML(data.scam_type || "Unknown")}</p>
+                </div>
+
+                <div class="result-section">
+                    <h3>Risk Level</h3>
+                    <p>${escapeHTML(data.risk_level || "Unknown")}</p>
+                </div>
+
+                <div class="result-section">
+                    <h3>Analysis</h3>
+                    <p>${escapeHTML(data.reason || "No explanation available.")}</p>
+                </div>
+
+                <div class="result-section">
+                    <h3>Warning Signs</h3>
+                    ${makeList(data.warning_signs)}
+                </div>
+
+                <div class="result-section">
+                    <h3>Safety Advice</h3>
+                    ${makeList(data.advice)}
+                </div>
+
+                <div class="result-section">
+                    <h3>Knowledge Sources</h3>
+                    ${makeList(data.sources)}
+                </div>
+
+                <div class="result-section">
+                    <h3>Retrieval Match</h3>
+                    <p>${escapeHTML(data.retrieval_match || "Not available")}</p>
+                </div>
+            `;
+
+            document.getElementById("results").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        } catch (error) {
+            notice.textContent = error.message || "Something went wrong. Check the VS Code terminal.";
+            notice.classList.add("visible");
+            ragStatus.textContent = "CHECK LOGS";
+        } finally {
+            scanButton.disabled = false;
+            scanButton.innerHTML = '<i class="fa-solid fa-bolt"></i> ANALYZE MESSAGE';
+        }
+    });
+
+    function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    function makeList(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+            return "<p>None available.</p>";
+        }
+
+        return "<ul>" + items.map((item) => {
+            let text;
+
+            if (typeof item === "string") {
+                text = item;
+            } else if (item && typeof item === "object") {
+                text = item.text || item.content || item.page_content ||
+                    item.source || item.document || JSON.stringify(item);
+            } else {
+                text = String(item);
+            }
+
+            return "<li>" + escapeHTML(text) + "</li>";
+        }).join("") + "</ul>";
+    }
+</script>
+</body>
+</html>
